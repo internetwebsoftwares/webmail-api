@@ -32,6 +32,11 @@ router.post("/email/new", auth, async (req, res) => {
       receiverName: `${sendingTo.firstName} ${sendingTo.lastName}`,
     });
 
+    if (!req.user.clientEmailIds.includes(sendingTo.email)) {
+      req.user.clientEmailIds.push(sendingTo.email);
+    }
+
+    await req.user.save();
     await email.save();
     res.send(`Email has been sent to: ${sendingTo.email}`);
   } catch (error) {
@@ -56,7 +61,7 @@ router.get("/emails/sent", auth, async (req, res) => {
   try {
     const sentEmails = await Email.find({
       from: req.user.email,
-    });
+    }).sort({ createdAt: "-1" });
     res.send(sentEmails);
   } catch (error) {
     res.status(500).send(error);
